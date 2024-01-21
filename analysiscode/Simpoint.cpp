@@ -618,15 +618,21 @@ void Simpoint::saveSimpointWeights2(const string &filename,
         }
     }
 
-    //!!!!!!!!!!!!!!!!!!
-    // it does not make sense to shrink both vector weight and cluster weight as they cancel out
-    // sumWeightsVector = 1.0;
-    //!!!!!!!!!!!!!!!!!!
-
     if (!filtered && (abs(sumWeights - 1) > 1e-6 || abs(sumWeightsVector - 1) > 1e-6)) {
         std::cout << "weight not as expected" << std::endl;
         exit(1);
     }
+
+    // sumWeights should equal sumWeightsVector
+    if (abs(sumWeights - sumWeightsVector) > 1e-6) {
+        std::cout << "weight not as expected" << std::endl;
+        exit(1);
+    }
+
+    //!!!!!!!!!!!!!!!!!!
+    // it does not make sense to shrink both vector weight and cluster weight as they cancel out
+    sumWeightsVector = 1.0;
+    //!!!!!!!!!!!!!!!!!!
 
     // estimation is:
     // simpoint stat / (prorated vector w / prorated cluster w), or
