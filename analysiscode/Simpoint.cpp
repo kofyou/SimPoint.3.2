@@ -546,7 +546,7 @@ vector<bool> Simpoint::getLargestClusters(double coveragePct, const Dataset &fin
     return largestClusters;
 }
 
-void Simpoint::saveSimpoints(const string &filename, const vector<bool> &largestClusters,
+vector<int> Simpoint::saveSimpoints(const string &filename, const vector<bool> &largestClusters,
         const Datapoint &distsToCenters, const vector<int> &labels, unsigned int k) {
 
     vector<double> minDists(k, -1.0);
@@ -568,6 +568,8 @@ void Simpoint::saveSimpoints(const string &filename, const vector<bool> &largest
         }
     }
     output.close();
+
+    return simpoints;
 }
 
 void Simpoint::saveSimpointWeights(const string &filename, 
@@ -585,6 +587,59 @@ void Simpoint::saveSimpointWeights(const string &filename,
     for (unsigned int r = 0; r < centers.numRows(); r++) {
         if (largestClusters[r]) {
             output << (centers.getWeight(r) / sumWeights) << " " << r << endl;
+        }
+    }
+    output.close();
+}
+
+void Simpoint::saveSimpointWeights2(const string &filename, 
+        const vector<bool> &largestClusters, const Dataset &centers,
+        bool filtered, const Dataset *wholeDataset,
+        const vector<int> &labels, const vector<int> &simulationPoints) {
+    ofstream output(filename.c_str());
+    Utilities::check(output.is_open(), "Simpoint::saveSimpointWeights2(): could not open file " +
+                            filename);
+    double sumWeights = 0.0;
+    for (unsigned int r = 0; r < centers.numRows(); r++) {
+        if (largestClusters[r]) {
+            sumWeights += centers.getWeight(r);
+        }
+    }
+
+    // assumption that should be followed by caller:
+    // filtered: largestClusters is largestClusters
+    // else largestClusters is non empty clusters
+
+    // if filtered, need to prorate vector weights; get filtered sum
+    double sumWeightsVector = 0.0;
+    for (unsigned int r = 0; r < labels.size(); r++) {
+        if (largestClusters[labels[r]]) {
+            sumWeightsVector += wholeDataset->getWeight(r);
+        }
+    }
+
+    //!!!!!!!!!!!!!!!!!!
+    // it does not make sense to shrink both vector weight and cluster weight as they cancel out
+    // sumWeightsVector = 1.0;
+    //!!!!!!!!!!!!!!!!!!
+
+    if (!filtered && (abs(sumWeights - 1) > 1e-6 || abs(sumWeightsVector - 1) > 1e-6)) {
+        std::cout << "weight not as expected" << std::endl;
+        exit(1);
+    }
+
+    // estimation is:
+    // simpoint stat / (prorated vector w / prorated cluster w), or
+    // simpoint stat * (prorated cluster w / prorated vector w)
+    // use the latter
+    // output (cluster weight / sumWeights) / (simulation point weight / sumWeights)
+
+    // output.precision(20);
+    for (unsigned int r = 0; r < centers.numRows(); r++) {
+        if (largestClusters[r]) {
+            double proratedCenterWeight = centers.getWeight(r) / sumWeights;
+            double proratedVectorWeight = wholeDataset->getWeight(simulationPoints[r]) / sumWeightsVector;
+            output << (proratedCenterWeight / proratedVectorWeight) << " " << r << endl;
         }
     }
     output.close();
@@ -675,13 +730,14 @@ void Simpoint::savePostClusteringData() {
         }
 
         // save simpoints
+        vector<int> simulationPoints;
         if (options.saveSimpointsName != "") {
             string name = options.saveSimpointsName;
             if (options.saveAll) { name = createFileNameFromRun(name, runNumber+1, options.kValues[runNumber]); }
 
             Logger::log() << "    Saving simpoints of all non-empty clusters to file '" 
                 << name << "'\n";
-            saveSimpoints(name, nonEmptyClusters, distsToCenters, labels,
+            simulationPoints = saveSimpoints(name, nonEmptyClusters, distsToCenters, labels,
                           finalCenters[runNumber]->numRows());
 
             if (options.coveragePct < 1.0) {
@@ -716,6 +772,20 @@ void Simpoint::savePostClusteringData() {
                     << "making up proportion " << options.coveragePct 
                     << " of all weights to file '" << name << "'\n";
                 saveSimpointWeights(name, largestClusters, *finalCenters[runNumber]);
+            }
+        }
+
+        if (options.saveSimpointsName != "" && options.saveSimpointWeightsName != "") {
+            string name = options.saveSimpointWeightsName + ".2";
+            saveSimpointWeights2(name, nonEmptyClusters, *finalCenters[runNumber],
+                false, wholeDataset, labels, simulationPoints);
+
+            if (options.coveragePct < 1.0) {
+                name = options.saveSimpointWeightsName + ".2" + ".lpt" + 
+                    toString(options.coveragePct);
+
+                saveSimpointWeights2(name, largestClusters, *finalCenters[runNumber],
+                    true, wholeDataset, labels, simulationPoints);
             }
         }
     }

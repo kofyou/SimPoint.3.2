@@ -128,12 +128,17 @@ class Simpoint {
         static Dataset *loadInitialCentersFromLabels(const string &file, const Dataset &data);
 
         // save the simpoints and labels to the given filename
-        static void saveSimpoints(const string &filename, const vector<bool> &largestClusters, 
+        static vector<int> saveSimpoints(const string &filename, const vector<bool> &largestClusters, 
                 const Datapoint &distsToCenters, const vector<int> &labels, unsigned int k);
 
         // save the simpoint weights and labels to the given filename
         static void saveSimpointWeights(const string &filename, 
                 const vector<bool> &largestClusters, const Dataset &centers);
+
+        static void saveSimpointWeights2(const string &filename, 
+                const vector<bool> &largestClusters, const Dataset &centers,
+                bool filtered, const Dataset *wholeDataset,
+                const vector<int> &labels, const vector<int> &simulationPoints);
 
         // create a filename that is useful for saving multiple runs
         static string createFileNameFromRun(const string &baseName, int runNumber, int kValue);
