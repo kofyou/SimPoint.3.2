@@ -79,6 +79,7 @@
 #include "FVParser.h"
 #include "Utilities.h"
 #include <string>
+#include <string.h>
 
 // take care of a difference between G++ 2.96 and 3.x
 #if (__GNUC__ >= 3)
@@ -86,6 +87,8 @@
 #else
     #include <strstream>
 #endif
+const int BUF_SIZE = 4096 * 4096;
+char buffer[BUF_SIZE];
 
 
 FVParser::FVParser(FILE *input_file) {
@@ -98,8 +101,6 @@ FVParser::FVParser(FILE *input_file) {
 
 bool FVParser::nextLine(list<FVParserToken> *result) {
     string line;
-    const int BUF_SIZE = 1024 * 1024;
-    char buffer[BUF_SIZE];
     buffer[0] = '\0';
     do {
         fgets(buffer, BUF_SIZE, input);
