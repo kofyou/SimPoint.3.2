@@ -605,7 +605,7 @@ void Simpoint::saveSimpointWeights2(const string &filename,
         cluster_weight_check[labels[r]] += wholeDataset->getWeight(r);
     }
     for (unsigned int r = 0; r < centers.numRows(); r++) {
-        std::cout << centers.getWeight(r) << " " << cluster_weight_check[r] << " " << (abs(centers.getWeight(r) - cluster_weight_check[r]) < 1e-6); 
+        std::cout << centers.getWeight(r) << " " << cluster_weight_check[r] << " " << (abs(centers.getWeight(r) - cluster_weight_check[r]) < 1e-6) << std::endl;
     }
 
     double sumWeights = 0.0;
