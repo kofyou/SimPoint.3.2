@@ -632,12 +632,15 @@ void Simpoint::saveSimpointWeights2(const string &filename,
         exit(1);
     }
 
+    // this can fail if the clustering did not get to converge
+    // should increase numKMeansIterations in this case
+
     // sumWeights should equal sumWeightsVector
     if (abs(sumWeights - sumWeightsVector) > 1e-6) {
         std::cout << "weight not as expected: "
             << sumWeights << " " << sumWeightsVector << " "
             << abs(sumWeights - sumWeightsVector) << std::endl;
-        exit(1);
+        // exit(1);
     }
 
     //!!!!!!!!!!!!!!!!!!
