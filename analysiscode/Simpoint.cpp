@@ -599,6 +599,15 @@ void Simpoint::saveSimpointWeights2(const string &filename,
     ofstream output(filename.c_str());
     Utilities::check(output.is_open(), "Simpoint::saveSimpointWeights2(): could not open file " +
                             filename);
+
+    std::vector<double> cluster_weight_check(centers.numRows(), 0);
+    for (unsigned int r = 0; r < labels.size(); r++) {
+        cluster_weight_check[labels[r]] += wholeDataset->getWeight(r);
+    }
+    for (unsigned int r = 0; r < centers.numRows(); r++) {
+        std::cout << centers.getWeight(r) << " " << cluster_weight_check[r] << " " << (abs(centers.getWeight(r) - cluster_weight_check[r]) < 1e-6); 
+    }
+
     double sumWeights = 0.0;
     for (unsigned int r = 0; r < centers.numRows(); r++) {
         if (largestClusters[r]) {
