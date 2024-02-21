@@ -619,13 +619,15 @@ void Simpoint::saveSimpointWeights2(const string &filename,
     }
 
     if (!filtered && (abs(sumWeights - 1) > 1e-6 || abs(sumWeightsVector - 1) > 1e-6)) {
-        std::cout << "weight not as expected" << std::endl;
+        std::cout << "weight not as expected: " << abs(sumWeights - 1) << " " << abs(sumWeightsVector - 1) << std::endl;
         exit(1);
     }
 
     // sumWeights should equal sumWeightsVector
     if (abs(sumWeights - sumWeightsVector) > 1e-6) {
-        std::cout << "weight not as expected" << std::endl;
+        std::cout << "weight not as expected: "
+            << sumWeights << " " << sumWeightsVector << " "
+            << abs(sumWeights - sumWeightsVector) << std::endl;
         exit(1);
     }
 
